@@ -110,3 +110,20 @@ export const getMethods = () => async (dispatch) => {
     dispatch({ type: types.METHODS_LIST_FAIL, payload: error.message });
   }
 };
+
+export const getReverseLocation = (latitude, longitude) => async (dispatch) => {
+  dispatch({ type: types.GET_REVERSE_LOCATION_REQUEST });
+  try {
+    const { data } = await axios.get(
+      `https://nominatim.openstreetmap.org/reverse?lat=${Number(
+        localStorage.getItem("lat")
+      )}&lon=${Number(localStorage.getItem("lng"))}&format=json`
+    );
+    dispatch({ type: types.GET_REVERSE_LOCATION_SUCCESS, payload: data.display_name });
+  } catch (error) {
+    dispatch({
+      type: types.GET_REVERSE_LOCATION_FAIL,
+      payload: error.message,
+    });
+  }
+};

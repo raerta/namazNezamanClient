@@ -117,6 +117,26 @@ export const methodListReducer = (
   }
 };
 
+export const getReverseLocationReducer = (
+  state = { loading: true, success: false, displayName: [] },
+  action
+) => {
+  switch (action.type) {
+    case types.GET_REVERSE_LOCATION_REQUEST:
+      return { loading: true, success: false, displayName: [] };
+    case types.GET_REVERSE_LOCATION_SUCCESS:
+      return {
+        loading: false,
+        success: true,
+        displayName: action.payload,
+      };
+    case types.GET_REVERSE_LOCATION_FAIL:
+      return { loading: false, error: action.payload };
+    default:
+      return state;
+  }
+};
+
 const reducers = {
   countryListReducer: countryListReducer,
   cityListReducer: cityListReducer,
@@ -124,6 +144,7 @@ const reducers = {
   methodListReducer: methodListReducer,
   singleTownReducer: singleTownReducer,
   getByLocationReducer: getByLocationReducer,
+  getReverseLocationReducer: getReverseLocationReducer,
 };
 
 export default combineReducers(reducers);
