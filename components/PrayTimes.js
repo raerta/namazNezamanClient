@@ -54,8 +54,16 @@ const PrayTimes = (props) => {
     prayTimes: townPrayTime,
   } = singleTown;
 
+  const getReverseR = useSelector((state) => state.getReverseLocationReducer);
+  const {
+    loading: loadingReverseLoc,
+    error: errorReverseLoc,
+    success: successReverseLoc,
+    displayName: displayNameReverse,
+  } = getReverseR;
+
   const [date, setDate] = useState(new Date().toLocaleTimeString().substring(0,5));
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState("TR");
   const [city, setCity] = useState("");
   const [town, setTown] = useState("");
   const [method, setMethod] = useState("");
@@ -67,6 +75,7 @@ const PrayTimes = (props) => {
   const [mapIsVisible, setMapIsVisible] = useState(false);
   const [pos, setPos] = useState("");
   const [prayTimes, setPrayTimes] = useState(null);
+  const [displayName, setDisplayName] = useState("");
 
   const { fajr, sunrise, dhuhr, asr, maghrib, isha } =
     prayTimes !== null && prayTimes;
@@ -76,6 +85,19 @@ const PrayTimes = (props) => {
   const month = today.getMonth() + 1;
   const day = today.getDate();
   const year = today.getFullYear();
+
+  useEffect(() => {
+    if (mapIsVisible) {
+      dispatch(getReverseLocation(latitude, longitude));
+      if (successReverseLoc) {
+        console.log(displayNameReverse);
+        setDisplayName(displayNameReverse);
+      }
+      if (errorReverseLoc) {
+        console.log(errorReverseLoc);
+      }
+    }
+  }, [pos]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -408,6 +430,9 @@ const PrayTimes = (props) => {
               <i className="isha"></i>
               <p>{isha}</p>
             </div>
+          </div>
+          <div className="text-white font-bold text-lg">
+            {displayName && displayName}
           </div>
         </div>
       </div>
