@@ -7,6 +7,7 @@ import {
   getCities,
   getCountries,
   getMethods,
+  getReverseLocation,
   getSingleTown,
   getTowns,
 } from "../redux/actions/actions";
