@@ -176,7 +176,6 @@ const PrayTimes = (props) => {
 
   useEffect(() => {
     if (country) {
-      setCity("")
       if (city && timeZone) {
         router.push(`/namazvakitleri/${country}/${city}/${timeZone}`);
       }
