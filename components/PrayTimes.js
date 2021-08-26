@@ -176,6 +176,7 @@ const PrayTimes = (props) => {
 
   useEffect(() => {
     if (country) {
+      setCity("")
       if (city && timeZone) {
         router.push(`/namazvakitleri/${country}/${city}/${timeZone}`);
       }
@@ -264,6 +265,8 @@ const PrayTimes = (props) => {
       }
     }
   }, [cities, props.city, timeZone, month, day, method]);
+
+  console.log(loadingTowns, loadingSingleTown, loadingByLocation)
 
   return (
     <div className="flex items-center justify-center flex-col">
@@ -424,7 +427,7 @@ const PrayTimes = (props) => {
           </p>
         </div>
         <div className="sm:pb-56">
-          {loadingTowns && loadingSingleTown && loadingByLocation ? (
+          {loadingTowns || loadingSingleTown || loadingByLocation ? (
             <div className="flex flex-wrap w-5/6 gap-6 md:w-full px-2 md:px-0 mx-auto md:mt-6 mt-0 md:justify-center justify-between text-white font-bold pb-6 h-96">
               Loading...
             </div>

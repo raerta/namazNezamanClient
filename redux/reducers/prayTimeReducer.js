@@ -2,7 +2,7 @@ import { combineReducers } from "redux";
 import * as types from "../types/prayTypes";
 
 export const countryListReducer = (
-  state = { loading: true, countries: [] },
+  state = { loading: false, countries: [] },
   action
 ) => {
   switch (action.type) {
@@ -20,7 +20,7 @@ export const countryListReducer = (
   }
 };
 export const cityListReducer = (
-  state = { loading: true, cities: [] },
+  state = { loading: false, cities: [] },
   action
 ) => {
   switch (action.type) {
@@ -39,7 +39,7 @@ export const cityListReducer = (
 };
 
 export const townListReducer = (
-  state = { loading: true, success: false, towns: [], praytimes: [] },
+  state = { loading: false, success: false, towns: [], praytimes: [] },
   action
 ) => {
   switch (action.type) {
@@ -60,7 +60,7 @@ export const townListReducer = (
 };
 
 export const getByLocationReducer = (
-  state = { loading: true, success: false, praytime: [] },
+  state = { loading: false, success: false, praytime: [] },
   action
 ) => {
   switch (action.type) {
@@ -80,7 +80,7 @@ export const getByLocationReducer = (
 };
 
 export const singleTownReducer = (
-  state = { loading: true, prayTimes: [] },
+  state = { loading: false, prayTimes: [] },
   action
 ) => {
   switch (action.type) {
@@ -99,7 +99,7 @@ export const singleTownReducer = (
 };
 
 export const methodListReducer = (
-  state = { loading: true, methods: [] },
+  state = { loading: false, methods: [] },
   action
 ) => {
   switch (action.type) {
@@ -118,7 +118,7 @@ export const methodListReducer = (
 };
 
 export const getReverseLocationReducer = (
-  state = { loading: true, success: false, displayName: [] },
+  state = { loading: false, success: false, displayName: [] },
   action
 ) => {
   switch (action.type) {
