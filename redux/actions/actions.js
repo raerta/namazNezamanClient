@@ -31,7 +31,7 @@ export const getTowns =
     if (method === "") {
       try {
         const { data } = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=${timeZone}&method=DIB`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=3&method=DIB`
         );
         dispatch({ type: types.TOWN_LIST_SUCCESS, payload: data });
       } catch (error) {
@@ -78,10 +78,10 @@ export const getByLocation =
 
 export const getSingleTown = (sT) => async (dispatch) => {
   dispatch({ type: types.SINGLE_TOWN_REQUEST });
-  if (sT.method === "") {
+  if (sT.method === "" && sT.timeZone === "") {
     try {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/getPrayTimes?townname=${sT.town}&cityname=${sT.city}&cc=${sT.country}&day=${sT.day}&month=${sT.month}&year=${sT.year}&timezone=${sT.timeZone}&method=DIB&flag=0`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/getPrayTimes?townname=${sT.town}&cityname=${sT.city}&cc=${sT.country}&day=${sT.day}&month=${sT.month}&year=${sT.year}&timezone=3&method=DIB&flag=0`
       );
       dispatch({ type: types.SINGLE_TOWN_SUCCESS, payload: data });
     } catch (error) {
@@ -119,7 +119,10 @@ export const getReverseLocation = (latitude, longitude) => async (dispatch) => {
         localStorage.getItem("lat")
       )}&lon=${Number(localStorage.getItem("lng"))}&format=json`
     );
-    dispatch({ type: types.GET_REVERSE_LOCATION_SUCCESS, payload: data.display_name });
+    dispatch({
+      type: types.GET_REVERSE_LOCATION_SUCCESS,
+      payload: data.display_name,
+    });
   } catch (error) {
     dispatch({
       type: types.GET_REVERSE_LOCATION_FAIL,

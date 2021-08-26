@@ -63,11 +63,13 @@ const PrayTimes = (props) => {
     displayName: displayNameReverse,
   } = getReverseR;
 
-  const [date, setDate] = useState(new Date().toLocaleTimeString().substring(0,5));
+  const [date, setDate] = useState(
+    new Date().toLocaleTimeString().substring(0, 5)
+  );
   const [country, setCountry] = useState("TR");
   const [city, setCity] = useState("");
   const [town, setTown] = useState("");
-  const [method, setMethod] = useState("");
+  const [method, setMethod] = useState("DIB");
   const [timeZone, setTimeZone] = useState("");
   const [countryName, setCountryName] = useState("");
   const [latitude, setLatitude] = useState("");
@@ -88,10 +90,21 @@ const PrayTimes = (props) => {
   const year = today.getFullYear();
 
   useEffect(() => {
+    dispatch(getCountries());
+    dispatch(getMethods());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDate(new Date().toLocaleTimeString().substring(0, 5));
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     if (mapIsVisible) {
       dispatch(getReverseLocation(latitude, longitude));
       if (successReverseLoc) {
-        console.log(displayNameReverse);
         setDisplayName(displayNameReverse);
       }
       if (errorReverseLoc) {
@@ -101,24 +114,34 @@ const PrayTimes = (props) => {
   }, [pos]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDate(new Date().toLocaleTimeString().substring(0,5));
-    }, 6000 );
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     if (props.country && props.city && props.timeZone) {
       setCountry(props.country);
       setCity(props.city);
       setTimeZone(props.timeZone);
     }
-  }, [props]);
+  }, [props, dispatch]);
 
   useEffect(() => {
-    dispatch(getCountries());
-    dispatch(getMethods());
-  }, [dispatch]);
+    if (country) {
+      setCity("");
+      setTown("");
+      setPrayTimes([]);
+      dispatch(getCities(country));
+    }
+  }, [country, dispatch]);
+
+  useEffect(() => {
+    if (city && successTownlist) {
+      const data =
+        successTownlist &&
+        towns.filter((t) => JSON.stringify(t) === JSON.stringify(city));
+      if (data[0]) {
+        setTown(data[0]);
+      } else {
+        setTown("");
+      }
+    }
+  }, [city, successTownlist]);
 
   useEffect(() => {
     if (pos) {
@@ -153,26 +176,11 @@ const PrayTimes = (props) => {
 
   useEffect(() => {
     if (country) {
-      setCity("");
-      setTown("");
-      dispatch(getCities(country));
+      if (city && timeZone) {
+        router.push(`/namazvakitleri/${country}/${city}/${timeZone}`);
+      }
     }
-  }, [country, dispatch]);
-
-  useEffect(() => {
-    if (country && city && method !== "") {
-      dispatch(getTowns(country, city, year, month, day, timeZone, method));
-    } else if (method) {
-      alert("Tüm bilgilerin girilmesi zorunludur.");
-    }
-  }, [dispatch, method]);
-
-  useEffect(() => {
-    if (city && timeZone) {
-      dispatch(getTowns(country, city, year, month, day, timeZone, method));
-      router.push(`/namazvakitleri/${country}/${city}/${timeZone}`);
-    }
-  }, [dispatch, city]);
+  }, [dispatch, city, country]);
 
   useEffect(() => {
     if (successTownlist) {
@@ -196,7 +204,7 @@ const PrayTimes = (props) => {
         })
       );
     }
-  }, [town, dispatch]);
+  }, [town, dispatch, method]);
 
   useEffect(() => {
     if (townPrayTime) {
@@ -231,8 +239,31 @@ const PrayTimes = (props) => {
     if (countries) {
       const data = countries.filter((c) => c.cc === country);
       setCountryName(data[0]?.cn && data[0].cn);
+      setTimeZone(data[0] && data[0].tz);
     }
   }, [countries, country]);
+
+  useEffect(() => {
+    if (cities && props.city) {
+    
+      const data = cities.filter((c) => c === props.city);
+      setCity(data[0]);
+      if ((props.city, props.timeZone, month, day)) {
+      
+        dispatch(
+          getTowns(
+            country,
+            props.city,
+            year,
+            month,
+            day,
+            props.timeZone,
+            method
+          )
+        );
+      }
+    }
+  }, [cities, props.city, timeZone, month, day, method]);
 
   return (
     <div className="flex items-center justify-center flex-col">
@@ -267,9 +298,13 @@ const PrayTimes = (props) => {
                 />
               </svg>
               {latitude ? (
-                <p className="sm:text-base text-xs text-blue-50 font-semibold">Konumunuz ayarlandı</p>
+                <p className="sm:text-base text-xs text-blue-50 font-semibold">
+                  Konumunuz ayarlandı
+                </p>
               ) : (
-                <p className="sm:text-base text-xs text-blue-50 font-semibold">Konumdan bul</p>
+                <p className="sm:text-base text-xs text-blue-50 font-semibold">
+                  Konumdan bul
+                </p>
               )}
             </div>
             <div className="bg-[#C4C4C4] w-1/5 h-20 flex items-center justify-center">
@@ -292,7 +327,7 @@ const PrayTimes = (props) => {
                 <option className="text-white" value={country}>
                   {country ? countryName : "Ülke Seçiniz"}
                 </option>
-                
+
                 {countries &&
                   countries.map((c) => (
                     <option
@@ -389,49 +424,55 @@ const PrayTimes = (props) => {
           </p>
         </div>
         <div className="sm:pb-56">
-          <div className="flex flex-wrap w-5/6 gap-6 md:w-full px-2 md:px-0 mx-auto md:mt-6 mt-0 md:justify-center justify-between text-white font-bold pb-6">
-            <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89]">
-              <p>İmsak</p>
-              <p>
-                <i className="imsak"></i>
-              </p>
-              <p>{fajr}</p>
+          {loadingTowns && loadingSingleTown && loadingByLocation ? (
+            <div className="flex flex-wrap w-5/6 gap-6 md:w-full px-2 md:px-0 mx-auto md:mt-6 mt-0 md:justify-center justify-between text-white font-bold pb-6 h-96">
+              Loading...
             </div>
+          ) : (
+            <div className="flex flex-wrap w-5/6 gap-6 md:w-full px-2 md:px-0 mx-auto md:mt-6 mt-0 md:justify-center justify-between text-white font-bold pb-6">
+              <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89]">
+                <p>İmsak</p>
+                <p>
+                  <i className="imsak"></i>
+                </p>
+                <p>{fajr}</p>
+              </div>
 
-            <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
-              <p className="">Güneş</p>
-              <i className="sunrise"></i>
+              <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
+                <p className="">Güneş</p>
+                <i className="sunrise"></i>
 
-              <p>{sunrise}</p>
+                <p>{sunrise}</p>
+              </div>
+
+              <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
+                <p>Öğle</p>
+                <p>
+                  <i className="dhur"></i>
+                </p>
+
+                <p>{dhuhr}</p>
+              </div>
+
+              <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
+                <p>İkindi</p>
+                <i className="asr"></i>
+                <p>{asr}</p>
+              </div>
+
+              <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
+                <p>Akşam</p>
+                <i className="maghrib"></i>
+                <p>{maghrib}</p>
+              </div>
+
+              <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
+                <p>Yatsı</p>
+                <i className="isha"></i>
+                <p>{isha}</p>
+              </div>
             </div>
-
-            <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
-              <p>Öğle</p>
-              <p>
-                <i className="dhur"></i>
-              </p>
-
-              <p>{dhuhr}</p>
-            </div>
-
-            <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
-              <p>İkindi</p>
-              <i className="asr"></i>
-              <p>{asr}</p>
-            </div>
-
-            <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
-              <p>Akşam</p>
-              <i className="maghrib"></i>
-              <p>{maghrib}</p>
-            </div>
-
-            <div className="flex flex-col justify-between items-center max-w-[176px] w-2/6 h-32 md:h-40 bg-[#B3A394] bg-opacity-50 border-2 hover:border-2 hover:border-[#1FAB89] hover:border-solid">
-              <p>Yatsı</p>
-              <i className="isha"></i>
-              <p>{isha}</p>
-            </div>
-          </div>
+          )}
           <div className="text-white font-bold text-lg">
             {displayName && displayName}
           </div>
