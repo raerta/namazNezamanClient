@@ -12,6 +12,7 @@ import {
   getTowns,
 } from "../redux/actions/actions";
 import dynamic from "next/dynamic";
+import { GET_REVERSE_LOCATION_RESET } from "../redux/types/prayTypes";
 
 const PrayTimes = (props) => {
   const DraggableMarker = dynamic(() => import("./DraggableMarker"), {
@@ -19,24 +20,24 @@ const PrayTimes = (props) => {
   });
   const router = useRouter();
   const dispatch = useDispatch();
-  const countryR = useSelector((state) => state.countryListReducer);
+
+  const countryList = useSelector((state) => state.countryListReducer);
   const {
     loading: loadingCountries,
     error: errorCountries,
     countries,
-  } = countryR;
+  } = countryList;
 
-  const cityR = useSelector((state) => state.cityListReducer);
-  const { loading: loadingCities, error: errorCities, cities } = cityR;
-
-  const townR = useSelector((state) => state.townListReducer);
+  const cityList = useSelector((state) => state.cityListReducer);
   const {
-    loading: loadingTowns,
-    error: errorTowns,
-    success: successTownlist,
-    towns,
-    praytimes: prayTime,
-  } = townR;
+    loading: loadingCities,
+    error: errorCities,
+    success: succesCities,
+    cities: citiesR,
+  } = cityList;
+
+  const methodR = useSelector((state) => state.methodListReducer);
+  const { loading: loadingMethods, error: errorMethods, methods } = methodR;
 
   const getByLocationR = useSelector((state) => state.getByLocationReducer);
   const {
@@ -44,9 +45,6 @@ const PrayTimes = (props) => {
     error: errorByLocation,
     praytime: prayTimeByLocation,
   } = getByLocationR;
-
-  const methodR = useSelector((state) => state.methodListReducer);
-  const { loading: loadingMethods, error: errorMethods, methods } = methodR;
 
   const singleTown = useSelector((state) => state.singleTownReducer);
   const {
@@ -63,22 +61,29 @@ const PrayTimes = (props) => {
     displayName: displayNameReverse,
   } = getReverseR;
 
+  const townR = useSelector((state) => state.townListReducer);
+  const {
+    loading: loadingTowns,
+    error: errorTowns,
+    success: successTownlist,
+    towns,
+    praytimes: prayTime,
+  } = townR;
+
   const [date, setDate] = useState(
     new Date().toLocaleTimeString().substring(0, 5)
   );
-  const [country, setCountry] = useState("TR");
+  const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [town, setTown] = useState("");
   const [method, setMethod] = useState("DIB");
   const [timeZone, setTimeZone] = useState("");
-  const [countryName, setCountryName] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const [locPrayTimes, setLocPrayTimes] = useState(false);
   const [mapIsVisible, setMapIsVisible] = useState(false);
   const [pos, setPos] = useState("");
   const [prayTimes, setPrayTimes] = useState(null);
-  const [displayName, setDisplayName] = useState("");
+  const [cities, setCities] = useState("");
 
   const { fajr, sunrise, dhuhr, asr, maghrib, isha } =
     prayTimes !== null && prayTimes;
@@ -89,6 +94,7 @@ const PrayTimes = (props) => {
   const day = today.getDate();
   const year = today.getFullYear();
 
+  // app ilk açıldığında ülke listesi ve method listesini getiriyor.
   useEffect(() => {
     dispatch(getCountries());
     dispatch(getMethods());
@@ -101,64 +107,71 @@ const PrayTimes = (props) => {
     return () => clearInterval(interval);
   }, []);
 
+  // lokasyon bilgisinden adres bilgisi getiren yapı.
   useEffect(() => {
     if (mapIsVisible) {
       dispatch(getReverseLocation(latitude, longitude));
-      if (successReverseLoc) {
-        setDisplayName(displayNameReverse);
-      }
       if (errorReverseLoc) {
         console.log(errorReverseLoc);
       }
     }
   }, [pos]);
 
+  // ilçeler getirildiğinde ilin merkezinin ya da alfabetik olarak ilk sıradaki ilçesinin namaz vakitleri:
   useEffect(() => {
-    if (props.country && props.city && props.timeZone) {
-      setCountry(props.country);
-      setCity(props.city);
-      setTimeZone(props.timeZone);
+    if (successTownlist) {
+      setPrayTimes(prayTime);
     }
-  }, [props, dispatch]);
+    return () => {};
+  }, [successTownlist]);
 
+  //ilçe değiştirildiğinde ilçeye göre namaz vakitlerini getirir.
+  useEffect(() => {
+    if (townPrayTime) {
+      setPrayTimes(townPrayTime);
+    }
+  }, [townPrayTime]);
+
+  useEffect(() => {
+    if (prayTime) {
+      setPrayTimes(prayTime);
+    }
+  }, [prayTime]);
+
+  // ülke değiştiğinde yapılan işlemler.
   useEffect(() => {
     if (country) {
       setCity("");
       setTown("");
       setPrayTimes([]);
+      setMethod("");
+      setMapIsVisible(false);
+      router.replace(`/namazvakitleri/${country}/${timeZone}`);
       dispatch(getCities(country));
     }
   }, [country, dispatch]);
 
+  // Şehir değiştiğinde yapılan işlemler.
   useEffect(() => {
-    if (city && successTownlist) {
-      const data =
-        successTownlist &&
-        towns.filter((t) => JSON.stringify(t) === JSON.stringify(city));
-      if (data[0]) {
-        setTown(data[0]);
-      } else {
-        setTown("");
-      }
+    if (city) {
+      setTown("");
+      router.push(
+        `/namazvakitleri/${props.country ? props.country : country}/${
+          props.timeZone ? props.timeZone : timeZone
+        }/${city}`
+      );
     }
-  }, [city, successTownlist]);
+  }, [city]);
 
+  // marker posizyonu değiştiğinde yapılan işlemler.
   useEffect(() => {
     if (pos) {
-      dispatch(
-        getByLocation(pos.lat, pos.lng, year, month, day, timeZ, method)
-      );
+      setLatitude(pos.lat);
+      setLongitude(pos.lng);
     }
-  }, [pos, dispatch, mapIsVisible]);
+  }, [pos, dispatch]);
 
-  useEffect(() => {
-    if (pos && method) {
-      dispatch(
-        getByLocation(pos.lat, pos.lng, year, month, day, timeZ, method)
-      );
-    }
-  }, [pos, dispatch, method]);
-
+  // lon lat değerleri getirildiğinde yapılan işlemler.
   useEffect(() => {
     if (latitude && longitude) {
       dispatch(
@@ -167,51 +180,102 @@ const PrayTimes = (props) => {
     }
   }, [dispatch, longitude, latitude, method]);
 
+  // lokasyon bilgisi apiye gönderildikten sonra namaz vakitlerini getiriyor.
   useEffect(() => {
     if (prayTimeByLocation) {
       setPrayTimes(prayTimeByLocation);
-      setLocPrayTimes(true);
     }
   }, [prayTimeByLocation]);
 
   useEffect(() => {
-    if (country) {
-      if (city && timeZone) {
-        router.push(`/namazvakitleri/${country}/${city}/${timeZone}`);
-      }
+    if (succesCities) {
+      setCities(citiesR);
     }
-  }, [dispatch, city, country]);
+  }, [succesCities, cities, citiesR]);
 
-  useEffect(() => {
-    if (successTownlist) {
-      setPrayTimes(prayTime);
-    }
-    return () => {};
-  }, [successTownlist]);
-
+  // ilçe değiştiğinde çalışan işlem.
   useEffect(() => {
     if (town) {
+      setMethod("");
+      router.replace(
+        `/namazvakitleri/${props.country}/${props.timeZone}/${props.city}/${town}`
+      );
+    }
+  }, [town]);
+
+  // daha önce haritadan konum bilgisi seçilmişse namaz vakitlerini getiriyor.
+  useEffect(() => {
+    if (localStorage.getItem("lat")) {
       dispatch(
-        getSingleTown({
+        getByLocation(
+          localStorage.getItem("lat"),
+          localStorage.getItem("lng"),
+          year,
+          month,
+          day,
+          timeZ,
+          method
+        )
+      );
+      dispatch(
+        getReverseLocation(
+          localStorage.getItem("lat"),
+          localStorage.getItem("lng")
+        )
+      );
+    }
+  }, []);
+
+  //method değiştiğinde namaz vakitlerini güncelliyor.
+  useEffect(() => {
+    if (
+      method !== "" &&
+      props.country !== "" &&
+      props.city !== undefined &&
+      props.timeZone !== undefined &&
+      town === ""
+    ) {
+      dispatch(
+        getTowns(
+          props.country,
+          props.city,
+          year,
+          month,
+          day,
+          props.timeZone,
+          method
+        )
+      );
+    }
+  }, [method]);
+
+  useEffect(() => {
+    if (method && town !== "") {
+      dispatch(
+        getSingleTown(
           town,
-          city,
-          country,
+          props.city,
+          props.country,
           day,
           month,
           year,
-          timeZone,
-          method,
-        })
+          props.timeZone,
+          method
+        )
       );
     }
   }, [town, dispatch, method]);
 
+  // map açıldığında yapılan işlemler.
   useEffect(() => {
-    if (townPrayTime) {
-      setPrayTimes(townPrayTime);
+    if (mapIsVisible) {
+      setCity("");
+      setTown("");
+      setCountry("");
     }
-  }, [townPrayTime]);
+  }, [mapIsVisible]);
 
+  //location bilgisini state e yazdırıyoruz. onclick eventi çalıştığında.
   const handleGetLocation = () => {
     var options = {
       enableHighAccuracy: true,
@@ -219,13 +283,14 @@ const PrayTimes = (props) => {
       maximumAge: 0,
     };
 
+    setMapIsVisible(!mapIsVisible);
+
     function success(pos) {
       var crd = pos.coords;
       localStorage.setItem("lat", crd.latitude);
       localStorage.setItem("lng", crd.longitude);
       setLatitude(crd.latitude);
       setLongitude(crd.longitude);
-      setMapIsVisible(!mapIsVisible);
     }
 
     function error(err) {
@@ -234,38 +299,6 @@ const PrayTimes = (props) => {
 
     navigator.geolocation.getCurrentPosition(success, error, options);
   };
-
-  useEffect(() => {
-    if (countries) {
-      const data = countries.filter((c) => c.cc === country);
-      setCountryName(data[0]?.cn && data[0].cn);
-      setTimeZone(data[0] && data[0].tz);
-    }
-  }, [countries, country]);
-
-  useEffect(() => {
-    if (cities && props.city) {
-    
-      const data = cities.filter((c) => c === props.city);
-      setCity(data[0]);
-      if ((props.city, props.timeZone, month, day)) {
-      
-        dispatch(
-          getTowns(
-            country,
-            props.city,
-            year,
-            month,
-            day,
-            props.timeZone,
-            method
-          )
-        );
-      }
-    }
-  }, [cities, props.city, timeZone, month, day, method]);
-
-  console.log(loadingTowns, loadingSingleTown, loadingByLocation)
 
   return (
     <div className="flex items-center justify-center flex-col">
@@ -313,7 +346,7 @@ const PrayTimes = (props) => {
               <select
                 placeholder="Ülke Seçiniz"
                 className="bg-[#1FAB89] w-full truncate  text-white pl-1 h-20 flex border-none outline-none font-bold"
-                value={country}
+                value={country ? country : props.country}
                 onChange={(e) => {
                   setCountry(
                     e.target.value.substr(0, e.target.value.indexOf(","))
@@ -326,8 +359,13 @@ const PrayTimes = (props) => {
                   );
                 }}
               >
-                <option className="text-white" value={country}>
-                  {country ? countryName : "Ülke Seçiniz"}
+                <option
+                  className="text-white"
+                  value={props.country ? props.country : country}
+                >
+                  {props.countryName
+                    ? props.countryName || country
+                    : "Ülke Seçiniz"}
                 </option>
 
                 {countries &&
@@ -346,13 +384,13 @@ const PrayTimes = (props) => {
               <select
                 placeholder="Şehir Seçiniz"
                 className="bg-[#1FAB89] w-full truncate  text-white pl-1 h-20 flex border-none outline-none font-bold"
-                value={city}
+                value={props.city}
                 onChange={(e) => {
                   setCity(e.target.value);
                 }}
               >
-                <option className="text-white" value={city}>
-                  {city ? city : "Şehir Seçiniz"}
+                <option className="text-white" value={props.city}>
+                  {props.city ? props.city : "Şehir Seçiniz"}
                 </option>
                 {cities &&
                   cities.map((c, i) => (
@@ -418,6 +456,21 @@ const PrayTimes = (props) => {
               />
             )}
           </div>
+          {successReverseLoc && !city ? (
+            <div className="text-white font-bold text-lg m-auto bg-green-400 mt-4 px-4 py-2 border-2 rounded-xl">
+              <p>{displayNameReverse} adresi için namaz vakitleri getirildi.</p>
+            </div>
+          ) : (
+            town && (
+              <div className="text-white font-bold text-lg m-auto bg-green-400 mt-4 px-4 py-2 border-2 rounded-xl">
+                <p>
+                  {props.city} ili, {town} ilçesi, {props.countryName} adresi
+                  için namaz vakitleri getirildi.
+                </p>
+              </div>
+            )
+          )}
+
           <p className="text-white font-semibold text-xl  sm:bg-transparent p-4">
             İster haritadan bir konum seç, ister kayıtlı konumlardan bir
             tanesini.
@@ -475,9 +528,6 @@ const PrayTimes = (props) => {
               </div>
             </div>
           )}
-          <div className="text-white font-bold text-lg">
-            {displayName && displayName}
-          </div>
         </div>
       </div>
     </div>

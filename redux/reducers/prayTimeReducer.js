@@ -20,19 +20,22 @@ export const countryListReducer = (
   }
 };
 export const cityListReducer = (
-  state = { loading: false, cities: [] },
+  state = { loading: false, success: false, cities: [] },
   action
 ) => {
   switch (action.type) {
     case types.CITY_LIST_REQUEST:
-      return { loading: true, cities: [] };
+      return { loading: true, success: false, cities: [] };
     case types.CITY_LIST_SUCCESS:
       return {
+        success: true,
         loading: false,
         cities: action.payload,
       };
     case types.CITY_LIST_FAIL:
       return { loading: false, error: action.payload };
+    case types.CITY_LIST_RESET:
+      return { loading: false, success: false};
     default:
       return state;
   }
@@ -54,6 +57,8 @@ export const townListReducer = (
       };
     case types.TOWN_LIST_FAIL:
       return { loading: false, error: action.payload };
+    case types.TOWN_LIST_RESET:
+      return { loading: false, towns: [], praytimes: [] };
     default:
       return state;
   }
@@ -132,6 +137,8 @@ export const getReverseLocationReducer = (
       };
     case types.GET_REVERSE_LOCATION_FAIL:
       return { loading: false, error: action.payload };
+    case types.GET_REVERSE_LOCATION_RESET:
+      return { loading: false, displayName: null };
     default:
       return state;
   }

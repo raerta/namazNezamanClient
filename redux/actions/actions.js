@@ -20,6 +20,7 @@ export const getCities = (country) => async (dispatch) => {
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/getCities?cc=${country}`
     );
     dispatch({ type: types.CITY_LIST_SUCCESS, payload: data.response });
+    dispatch({ type: types.TOWN_LIST_RESET });
   } catch (error) {
     dispatch({ type: types.CITY_LIST_FAIL, payload: error.message });
   }
@@ -76,28 +77,30 @@ export const getByLocation =
     }
   };
 
-export const getSingleTown = (sT) => async (dispatch) => {
-  dispatch({ type: types.SINGLE_TOWN_REQUEST });
-  if (sT.method === "" && sT.timeZone === "") {
-    try {
-      const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/getPrayTimes?townname=${sT.town}&cityname=${sT.city}&cc=${sT.country}&day=${sT.day}&month=${sT.month}&year=${sT.year}&timezone=3&method=DIB&flag=0`
-      );
-      dispatch({ type: types.SINGLE_TOWN_SUCCESS, payload: data });
-    } catch (error) {
-      dispatch({ type: types.SINGLE_TOWN_FAIL, payload: error.message });
+export const getSingleTown =
+  (town, city, country, day, month, year, timeZone, method) =>
+  async (dispatch) => {
+    dispatch({ type: types.SINGLE_TOWN_REQUEST });
+    if (method === "" && timeZone === "") {
+      try {
+        const { data } = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/getPrayTimes?townname=${town}&cityname=${city}&cc=${country}&day=${day}&month=${month}&year=${year}&timezone=3&method=DIB&flag=0`
+        );
+        dispatch({ type: types.SINGLE_TOWN_SUCCESS, payload: data });
+      } catch (error) {
+        dispatch({ type: types.SINGLE_TOWN_FAIL, payload: error.message });
+      }
+    } else {
+      try {
+        const { data } = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/getPrayTimes?townname=${town}&cityname=${city}&cc=${country}&day=${day}&month=${month}&year=${year}&timezone=${timeZone}&method=${method}&flag=0`
+        );
+        dispatch({ type: types.SINGLE_TOWN_SUCCESS, payload: data });
+      } catch (error) {
+        dispatch({ type: types.SINGLE_TOWN_FAIL, payload: error.message });
+      }
     }
-  } else {
-    try {
-      const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/getPrayTimes?townname=${sT.town}&cityname=${sT.city}&cc=${sT.country}&day=${sT.day}&month=${sT.month}&year=${sT.year}&timezone=${sT.timeZone}&method=${sT.method}&flag=0`
-      );
-      dispatch({ type: types.SINGLE_TOWN_SUCCESS, payload: data });
-    } catch (error) {
-      dispatch({ type: types.SINGLE_TOWN_FAIL, payload: error.message });
-    }
-  }
-};
+  };
 
 export const getMethods = () => async (dispatch) => {
   dispatch({ type: types.METHODS_LIST_REQUEST });
