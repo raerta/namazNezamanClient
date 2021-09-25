@@ -44,6 +44,7 @@ export const getTowns =
         const { data } = await axios.get(
           `https://eslikci.com:5201/api/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=${timeZone}&method=${method}`
         );
+        console.log(data)
         dispatch({ type: types.TOWN_LIST_SUCCESS, payload: data });
       } catch (error) {
         dispatch({ type: types.TOWN_LIST_FAIL, payload: error.message });

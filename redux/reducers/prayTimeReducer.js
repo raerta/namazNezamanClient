@@ -52,7 +52,7 @@ export const townListReducer = (
       return {
         loading: false,
         success: true,
-        towns: action.payload.response,
+        towns: action.payload.towns,
         praytimes: action.payload.praytime,
       };
     case types.TOWN_LIST_FAIL:
