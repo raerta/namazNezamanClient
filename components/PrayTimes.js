@@ -143,7 +143,7 @@ const PrayTimes = (props) => {
     if (country) {
       setCity("");
       setTown("");
-      setPrayTimes([]);
+      setPrayTimes("");
       setMethod("");
       setMapIsVisible(false);
       router.replace(`/namazvakitleri/${country}/${timeZone}`);
