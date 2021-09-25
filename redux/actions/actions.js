@@ -26,6 +26,7 @@ export const getCities = (country) => async (dispatch) => {
   }
 };
 
+
 export const getTowns =
   (country, city, year, month, day, timeZone, method) => async (dispatch) => {
     dispatch({ type: types.TOWN_LIST_REQUEST });
