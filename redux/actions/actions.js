@@ -32,7 +32,7 @@ export const getTowns =
     if (method === "") {
       try {
         const { data } = await axios.get(
-          `http://185.242.163.141:5201/api/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=3&method=DIB`
+          `https://eslikci.com:5201/api/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=3&method=DIB`
         );
         dispatch({ type: types.TOWN_LIST_SUCCESS, payload: data });
       } catch (error) {
@@ -41,7 +41,7 @@ export const getTowns =
     } else {
       try {
         const { data } = await axios.get(
-          `http://185.242.163.141:5201/api/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=${timeZone}&method=${method}`
+          `https://eslikci.com:5201/api/getTowns?cc=${country}&cityname=${city}&year=${year}&month=${month}&day=${day}&timezone=${timeZone}&method=${method}`
         );
         dispatch({ type: types.TOWN_LIST_SUCCESS, payload: data });
       } catch (error) {
